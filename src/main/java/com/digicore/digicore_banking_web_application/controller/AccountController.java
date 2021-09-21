@@ -16,6 +16,44 @@ import java.util.List;
 
 @RestController
 public class AccountController {
+    private final AccountService service;
 
+    public AccountController(AccountService service) {
+        this.service = service;
+    }
+
+    @GetMapping(path = "account_info/{accountNumber}")
+    public ResponseEntity<AccountInfoResponse> getAccountInfo(@PathVariable String accountNumber){
+        return service.getAccountInfo(accountNumber);
+    }
+
+    @GetMapping(path = "account_statement/{accountNumber}")
+    public ResponseEntity<TransactionHistory> getTransactionHistory(@PathVariable String accountNumber){
+        return service.getTransactionHistory(accountNumber);
+    }
+
+    @PostMapping(path = "/create")
+    public ResponseEntity<CreateAccountResponse> createAccount(@RequestBody CreateAccountRequest request){
+
+        var account = service.createAccount(request);
+
+        return  new ResponseEntity<>(account, HttpStatus.OK);
+    }
+
+    @PostMapping(path = "/withdraw")
+    public ResponseEntity<?> doWithdrawal(@RequestBody WithdrawalRequest request){
+
+        var withdrawal = service.withdraw(request);
+
+        if(withdrawal.isSuccess() == false) return  new ResponseEntity<>(withdrawal, HttpStatus.BAD_REQUEST);
+
+        return new ResponseEntity<>(withdrawal, HttpStatus.OK);
+    }
+
+    @PostMapping(path = "/deposit")
+    public ResponseEntity<DepositResponse> doDeposit(@RequestBody DepositRequest depositRequest){
+
+        return service.deposit(depositRequest);
+    }
 
 }
