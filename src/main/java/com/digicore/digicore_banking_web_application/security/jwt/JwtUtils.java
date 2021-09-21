@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -17,10 +16,10 @@ public class JwtUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    @Value("${contributoryapp.app.jwtSecret}")
+    @Value("${digicore.app.jwtSecret}")
     private String jwtSecret;
 
-    @Value("${contributoryapp.app.jwtExpirationMs}")
+    @Value("${digicore.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
 
@@ -76,13 +75,7 @@ public class JwtUtils {
         return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
     }
 
-    private Boolean isTokenExpired(String token){
-        return  expirationDate(token).before(new Date());
-    }
 
-    private  String extractUsername(String token){
-        return extractClaim(token, Claims::getSubject);
-    }
 
 
 }

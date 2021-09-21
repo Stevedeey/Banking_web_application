@@ -1,5 +1,6 @@
 package com.digicore.digicore_banking_web_application.service;
 
+import com.digicore.digicore_banking_web_application.Transaction.TransactionHistory;
 import com.digicore.digicore_banking_web_application.model.AccountEntity;
 import com.digicore.digicore_banking_web_application.payload.auth.LoginRequest;
 import com.digicore.digicore_banking_web_application.payload.auth.LoginResponse;
@@ -10,7 +11,7 @@ import com.digicore.digicore_banking_web_application.payload.response.*;
 import org.springframework.http.ResponseEntity;
 
 
-import java.util.List;
+
 import java.util.Map;
 
 public interface AccountService {
@@ -21,5 +22,6 @@ public interface AccountService {
     WithdrawalResponse withdraw (WithdrawalRequest request);
     ResponseEntity<DepositResponse> deposit(DepositRequest depositRequest);
     ResponseEntity<AccountInfoResponse> getAccountInfo (String accountNumber);
-    ResponseEntity<List<AccountHistoryResponse>> getTransactionHistory(String accountNumber);
+    ResponseEntity<TransactionHistory> getTransactionHistory(String accountNumber);
+//    ResponseEntity<List<TransactionHistoryResponse>> getTransactionHistory(String accountNumber);
 }

@@ -1,8 +1,12 @@
 package com.digicore.digicore_banking_web_application.service;
 
+import com.digicore.digicore_banking_web_application.Transaction.TransactionHistory;
+import com.digicore.digicore_banking_web_application.exception.ApiRequestException;
 import com.digicore.digicore_banking_web_application.exception.ApiRequestUnauthorizedException;
+import com.digicore.digicore_banking_web_application.exception.ApiResourceNotFoundException;
 import com.digicore.digicore_banking_web_application.model.AccountEntity;
-import com.digicore.digicore_banking_web_application.model.TransactionDetails;
+import com.digicore.digicore_banking_web_application.Transaction.ETransactionType;
+import com.digicore.digicore_banking_web_application.Transaction.TransactionDetail;
 import com.digicore.digicore_banking_web_application.payload.auth.LoginRequest;
 import com.digicore.digicore_banking_web_application.payload.auth.LoginResponse;
 import com.digicore.digicore_banking_web_application.payload.requests.CreateAccountRequest;
@@ -14,8 +18,10 @@ import com.digicore.digicore_banking_web_application.security.security_service.U
 import com.digicore.digicore_banking_web_application.service.AccountDaoService.AccountHistoryDaoImpl;
 
 import com.digicore.digicore_banking_web_application.utility.Util;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,6 +34,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
+@Slf4j
 public class AccountServiceImpl implements AccountService{
 
     private final Double maximumDeposit = 1000000.0;
@@ -37,26 +44,37 @@ public class AccountServiceImpl implements AccountService{
     private HashMap<String, AccountEntity> accountMap = new HashMap<>();
     List<String> nameList = new ArrayList<>();
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtils jwtUtils;
+    private  AuthenticationManager authenticationManager;
+    private  JwtUtils jwtUtils;
     private  AccountHistoryDaoImpl accountHistoryDao;
-
-
-
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-
     @Autowired
-    public AccountServiceImpl(AuthenticationManager authenticationManager, JwtUtils jwtUtils,
-                              AccountHistoryDaoImpl accountHistoryDao,
-                              BCryptPasswordEncoder bCryptPasswordEncoder) {
-        this.authenticationManager = authenticationManager;
+    public void setJwtUtils(JwtUtils jwtUtils) {
         this.jwtUtils = jwtUtils;
     }
+
+    @Autowired
+    public void setAuthenticationManager(AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
+    }
+
+    @Autowired
+    public void setAccountHistoryDao(AccountHistoryDaoImpl accountHistoryDao) {
+        this.accountHistoryDao = accountHistoryDao;
+    }
+
+    @Autowired
+    public void setbCryptPasswordEncoder(BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    }
+
+
 
     @Override
     public Map<String, AccountEntity> getAccountMap() {
@@ -102,7 +120,7 @@ public class AccountServiceImpl implements AccountService{
         account.setBalance(initialDeposit);
         account.setPassword(bCryptPasswordEncoder.encode(createAccountRequest.getAccountPassword()));
 
-        TransactionDetails transactionDetail = new TransactionDetails();
+        TransactionDetail transactionDetail = new TransactionDetail();
 
         transactionDetail.setTransactionDate(currentDate);
         transactionDetail.setTransactionType("Deposit");
@@ -150,22 +168,164 @@ public class AccountServiceImpl implements AccountService{
     }
 
     @Override
-    public WithdrawalResponse withdraw(WithdrawalRequest request) {
-        return null;
+    public WithdrawalResponse withdraw(WithdrawalRequest withdrawalRequest) {
+
+        UserDetailsImpl principal = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String accountNumber = principal.getUsername();
+
+        AccountEntity userAccount = getAccountMap().get(accountNumber);
+
+        WithdrawalResponse response;
+
+        if (!userAccount.getAccountNumber().equals(withdrawalRequest.getAccountNumber())) { //indicate that the user has not supplied his account or does not match
+
+            response = new WithdrawalResponse();
+            response.setResponseCode(400);
+            response.setSuccess(false);
+            response.setMessage("Account does not exist! ");
+
+            return response;
+        }
+
+        boolean match = bCryptPasswordEncoder.matches(withdrawalRequest.getAccountPassword(), principal.getPassword());
+
+        if (!match) {
+            response = new WithdrawalResponse();
+            response.setResponseCode(400);
+            response.setSuccess(false);
+            response.setMessage("You are not authorized to withdraw from this account!");
+            return response;
+
+        }
+
+        if (userAccount.getBalance() - withdrawalRequest.getWithdrawnAmount() < minimumBalance) {
+            response = new WithdrawalResponse();
+
+            response.setResponseCode(400);
+            response.setSuccess(false);
+            response.setMessage("You  must have a minimum of #500 in your account ");
+
+            return response;
+        }
+
+        //withdrawing....
+
+        Double newBalance = userAccount.getBalance() - withdrawalRequest.getWithdrawnAmount();
+        userAccount.setBalance(newBalance);
+
+        //set transactionDetail
+        Date currentDate = Util.generateCurrentDate();
+
+        TransactionDetail transactionDetail = new TransactionDetail();
+
+        transactionDetail.setAccountNumber(withdrawalRequest.getAccountNumber());
+        transactionDetail.setAmount(withdrawalRequest.getWithdrawnAmount());
+        transactionDetail.setAccountBalance(newBalance);
+        transactionDetail.setTransactionDate(currentDate);
+        transactionDetail.setTransactionType(ETransactionType.WITHDRAW.toString());
+        transactionDetail.setNarration(withdrawalRequest.getNarration());
+
+        accountHistoryDao.save(transactionDetail);
+
+        response = new WithdrawalResponse();
+        response.setMessage("Success Withdrawal");
+        response.setSuccess(true);
+        response.setResponseCode(200);
+
+        log.info("Balance {} ", userAccount.getBalance());
+
+        return response;
     }
 
     @Override
     public ResponseEntity<DepositResponse> deposit(DepositRequest depositRequest) {
-        return null;
+        DepositResponse res = new DepositResponse();
+
+        //getting account by accountNumber
+        AccountEntity userAccount = getAccountMap().get(depositRequest.getAccountNumber());
+
+
+        if (depositRequest.getAmount() >= maximumDeposit || depositRequest.getAmount() <= minimumDeposit)
+            throw new ApiRequestException("Error depositing funds");
+
+        if (userAccount != null) {
+
+            //do Deposit
+            Double newBalance = userAccount.getBalance() + depositRequest.getAmount();
+            userAccount.setBalance(newBalance);
+
+            var transactionDetail = getTransactionDetail(new TransactionDetail(),
+                    depositRequest, newBalance);
+            accountHistoryDao.save(transactionDetail);
+            log.info(":::Got into the deposit and save transaction history");
+
+        } else {
+            throw new ApiResourceNotFoundException("Account does not exist!!!");
+        }
+
+        res.setMessage("Successfully deposited money");
+        res.setSuccess(true);
+        res.setResponseCode(201);
+
+        return new ResponseEntity<>(res, HttpStatus.CREATED);
     }
 
     @Override
     public ResponseEntity<AccountInfoResponse> getAccountInfo(String accountNumber) {
-        return null;
+
+        AccountInfoResponse accountInfoResponse = new AccountInfoResponse();
+        AccountResponse accountResponse = new AccountResponse();
+
+        AccountEntity account = accountMap.get(accountNumber);
+
+        if (account != null) {
+
+            accountResponse.setAccountName(account.getAccountName());
+            accountResponse.setAccountNumber(account.getAccountNumber());
+            accountResponse.setBalance(account.getBalance());
+
+            accountInfoResponse.setAccountResponse(accountResponse);
+        } else {
+            throw new ApiResourceNotFoundException("No user with this username found in our database!!");
+        }
+
+        accountInfoResponse.setMessage("Account info fetched succesfully!!");
+        accountInfoResponse.setResponseCode(200);
+        accountInfoResponse.setSuccess(true);
+
+        return new ResponseEntity<>(accountInfoResponse, HttpStatus.CREATED);
     }
 
     @Override
-    public ResponseEntity<List<AccountHistoryResponse>> getTransactionHistory(String accountNumber) {
-        return null;
+    public ResponseEntity<TransactionHistory> getTransactionHistory(String accountNumber) {
+
+        var transactionHistoryList = accountHistoryDao.getAccountHistory(accountNumber);
+        TransactionHistory transactionHistory = new TransactionHistory();
+        transactionHistory.setTransactionHistoryResponseList(transactionHistoryList);
+
+        return new ResponseEntity<>(transactionHistory, HttpStatus.OK);
     }
+
+    //::: HELPER METHODS::::::://///
+
+    private static String getLoggedInUserName() {
+
+        return SecurityContextHolder.getContext().getAuthentication().getName(); //getLogged in user
+    }
+
+    private static TransactionDetail getTransactionDetail(TransactionDetail transactionDetail, DepositRequest depositRequest, Double newBalance) {
+
+        Date currentDate = Util.generateCurrentDate();
+
+        transactionDetail.setAccountNumber(depositRequest.getAccountNumber());
+        transactionDetail.setAmount(depositRequest.getAmount());
+        transactionDetail.setAccountBalance(newBalance);
+        transactionDetail.setTransactionDate(currentDate);
+        transactionDetail.setTransactionType(ETransactionType.DEPOSIT.toString());
+        transactionDetail.setNarration(depositRequest.getNarration());
+
+        return transactionDetail;
+    }
+
 }

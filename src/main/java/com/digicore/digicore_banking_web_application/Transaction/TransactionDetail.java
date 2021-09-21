@@ -1,4 +1,4 @@
-package com.digicore.digicore_banking_web_application.model;
+package com.digicore.digicore_banking_web_application.Transaction;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +11,7 @@ import java.util.Date;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransactionDetails {
+public class TransactionDetail {
 
     private String accountNumber;
 
