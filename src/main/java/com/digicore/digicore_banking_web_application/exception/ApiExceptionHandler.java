@@ -35,4 +35,15 @@ public class ApiExceptionHandler {
 
         return new ResponseEntity<>(apiException, notFound);
     }
+
+    @ExceptionHandler(value = {ApiRequestUnauthorizedException.class})
+    public ResponseEntity<Object> handleApiRequestUnauthorizedException(ApiResourceNotFoundException e) {
+        HttpStatus notFound = HttpStatus.UNAUTHORIZED;
+
+        ApiException apiException = new ApiException(e.getMessage(),
+                false, notFound, ZonedDateTime.now(ZoneId.of("Z")));
+
+
+        return new ResponseEntity<>(apiException, notFound);
+    }
 }
