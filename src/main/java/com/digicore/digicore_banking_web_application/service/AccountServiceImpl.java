@@ -1,8 +1,8 @@
 package com.digicore.digicore_banking_web_application.service;
 
-import com.digicore.digicore_banking_web_application.exception.ApiRequestException;
 import com.digicore.digicore_banking_web_application.exception.ApiRequestUnauthorizedException;
 import com.digicore.digicore_banking_web_application.model.AccountEntity;
+import com.digicore.digicore_banking_web_application.model.TransactionDetails;
 import com.digicore.digicore_banking_web_application.payload.auth.LoginRequest;
 import com.digicore.digicore_banking_web_application.payload.auth.LoginResponse;
 import com.digicore.digicore_banking_web_application.payload.requests.CreateAccountRequest;
@@ -13,20 +13,19 @@ import com.digicore.digicore_banking_web_application.security.jwt.JwtUtils;
 import com.digicore.digicore_banking_web_application.security.security_service.UserDetailsImpl;
 import com.digicore.digicore_banking_web_application.service.AccountDaoService.AccountHistoryDaoImpl;
 
+import com.digicore.digicore_banking_web_application.utility.Util;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class AccountServiceImpl implements AccountService{
@@ -38,14 +37,23 @@ public class AccountServiceImpl implements AccountService{
     private HashMap<String, AccountEntity> accountMap = new HashMap<>();
     List<String> nameList = new ArrayList<>();
 
-    private AuthenticationManager authenticationManager;
-    private JwtUtils jwtUtils;
-    private AccountHistoryDaoImpl accountHistoryDao;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
+    private  AccountHistoryDaoImpl accountHistoryDao;
+
+
+
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
 
     @Autowired
     public AccountServiceImpl(AuthenticationManager authenticationManager, JwtUtils jwtUtils,
-                              AccountHistoryDaoImpl accountHistoryDao) {
+                              AccountHistoryDaoImpl accountHistoryDao,
+                              BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
     }
@@ -57,12 +65,69 @@ public class AccountServiceImpl implements AccountService{
 
     @Override
     public CreateAccountResponse createAccount(CreateAccountRequest createAccountRequest) {
-        return null;
+
+        String accountNumber = Util.generateAccountID();
+
+        Date currentDate = Util.generateCurrentDate();
+
+        CreateAccountResponse createAccountResponse;
+
+        if (nameList.contains(createAccountRequest.getAccountName())) { //checking if there is a user with this name
+            createAccountResponse = new CreateAccountResponse();
+            createAccountResponse.setResponseCode(400);
+            createAccountResponse.setSuccess(false);
+            createAccountResponse.setMessage("User with this name already exist");
+            return createAccountResponse;
+        }
+
+        if(accountMap.containsKey(accountNumber)){
+            createAccount(createAccountRequest);
+        }
+
+        //Enforce minimum balance
+        if (createAccountRequest.getInitialDeposit() < minimumBalance) {
+
+            createAccountResponse = new CreateAccountResponse();
+            createAccountResponse.setResponseCode(400);
+            createAccountResponse.setSuccess(false);
+            createAccountResponse.setMessage("Your initial deposit cannot be less than 500 ");
+            return createAccountResponse;
+
+        }
+
+        AccountEntity account = new AccountEntity();
+        Double initialDeposit = createAccountRequest.getInitialDeposit();
+        account.setAccountName(createAccountRequest.getAccountName());
+        account.setAccountNumber(accountNumber);
+        account.setBalance(initialDeposit);
+        account.setPassword(bCryptPasswordEncoder.encode(createAccountRequest.getAccountPassword()));
+
+        TransactionDetails transactionDetail = new TransactionDetails();
+
+        transactionDetail.setTransactionDate(currentDate);
+        transactionDetail.setTransactionType("Deposit");
+        transactionDetail.setAccountNumber(accountNumber);
+        transactionDetail.setAccountBalance(initialDeposit);
+        transactionDetail.setAmount(initialDeposit);
+        transactionDetail.setNarration("Initial Deposit");
+
+        if (accountMap == null) accountMap = new HashMap<>();
+
+        accountMap.put(accountNumber, account);
+        nameList.add(createAccountRequest.getAccountName()); // Using this to keep track of account names
+
+        createAccountResponse = new CreateAccountResponse();
+        createAccountResponse.setMessage("Account successfully created" + "Your new account number is " + accountNumber);
+        createAccountResponse.setSuccess(true);
+        createAccountResponse.setResponseCode(200);
+
+
+        return createAccountResponse;
     }
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
-        Authentication authentication = null;
+        Authentication authentication;
         try {
 
             authentication = authenticationManager.authenticate(new
@@ -80,7 +145,6 @@ public class AccountServiceImpl implements AccountService{
 
         String jwtString = jwtUtils.generateJwtToken(authentication);
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         return new LoginResponse(true, jwtString);
     }
