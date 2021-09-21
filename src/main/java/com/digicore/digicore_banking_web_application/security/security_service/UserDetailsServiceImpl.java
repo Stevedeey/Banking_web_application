@@ -1,5 +1,6 @@
 package com.digicore.digicore_banking_web_application.security.security_service;
 
+import com.digicore.digicore_banking_web_application.exception.ApiResourceNotFoundException;
 import com.digicore.digicore_banking_web_application.model.AccountEntity;
 import com.digicore.digicore_banking_web_application.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         AccountEntity account = this.accountService.getAccountMap().get(accountNumber);
 
         if (account == null) {
-     //       throw new ApiRequestException( accountNumber + " does not exist in our database");
+            throw new ApiResourceNotFoundException( accountNumber + " does not exist in our database");
         }
 
         return UserDetailsImpl.build(account);
