@@ -1,7 +1,7 @@
 package com.digicore.digicore_banking_web_application.service;
 
 import com.digicore.digicore_banking_web_application.Transaction.TransactionHistory;
-import com.digicore.digicore_banking_web_application.exception.ApiRequestException;
+import com.digicore.digicore_banking_web_application.exception.ApiBadRequestException;
 import com.digicore.digicore_banking_web_application.exception.ApiRequestUnauthorizedException;
 import com.digicore.digicore_banking_web_application.exception.ApiResourceNotFoundException;
 import com.digicore.digicore_banking_web_application.model.AccountEntity;
@@ -247,7 +247,7 @@ public class AccountServiceImpl implements AccountService{
 
 
         if (depositRequest.getAmount() >= maximumDeposit || depositRequest.getAmount() <= minimumDeposit)
-            throw new ApiRequestException("Error depositing funds");
+            throw new ApiBadRequestException("Error depositing funds");
 
         if (userAccount != null) {
 
