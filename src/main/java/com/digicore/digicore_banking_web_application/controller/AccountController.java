@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-
 @RestController
 public class AccountController {
     private final AccountService service;
@@ -26,36 +25,36 @@ public class AccountController {
 
 
     @GetMapping(path = "account_info/{accountNumber}")
-    public ResponseEntity<AccountInfoResponse> getAccountInfo(@PathVariable String accountNumber){
+    public ResponseEntity<AccountInfoResponse> getAccountInfo(@PathVariable String accountNumber) {
 
         return service.getAccountInfo(accountNumber);
     }
 
     @GetMapping(path = "account_statement/{accountNumber}")
-    public ResponseEntity<TransactionHistory> getTransactionHistory(@PathVariable String accountNumber){
+    public ResponseEntity<TransactionHistory> getTransactionHistory(@PathVariable String accountNumber) {
         return service.getTransactionHistory(accountNumber);
     }
 
     @PostMapping(path = "/create")
-    public ResponseEntity<CreateAccountResponse> createAccount(@RequestBody CreateAccountRequest request){
+    public ResponseEntity<CreateAccountResponse> createAccount(@RequestBody CreateAccountRequest request) {
 
         var account = service.createAccount(request);
 
-        return  new ResponseEntity<>(account, HttpStatus.OK);
+        return new ResponseEntity<>(account, HttpStatus.OK);
     }
 
     @PostMapping(path = "/withdraw")
-    public ResponseEntity<?> doWithdrawal(@RequestBody WithdrawalRequest request){
+    public ResponseEntity<?> doWithdrawal(@RequestBody WithdrawalRequest request) {
 
         var withdrawal = service.withdraw(request);
 
-        if(withdrawal.isSuccess() == false) return  new ResponseEntity<>(withdrawal, HttpStatus.BAD_REQUEST);
+        if (withdrawal.isSuccess() == false) return new ResponseEntity<>(withdrawal, HttpStatus.BAD_REQUEST);
 
         return new ResponseEntity<>(withdrawal, HttpStatus.OK);
     }
 
     @PostMapping(path = "/deposit")
-    public ResponseEntity<DepositResponse> doDeposit(@RequestBody DepositRequest depositRequest){
+    public ResponseEntity<DepositResponse> doDeposit(@RequestBody DepositRequest depositRequest) {
 
         return service.deposit(depositRequest);
     }

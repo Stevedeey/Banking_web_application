@@ -1,14 +1,12 @@
 package com.digicore.digicore_banking_web_application.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 @Data
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class AccountEntity {
 
     private String accountName;

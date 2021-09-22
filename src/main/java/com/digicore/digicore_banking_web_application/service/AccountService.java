@@ -11,17 +11,22 @@ import com.digicore.digicore_banking_web_application.payload.response.*;
 import org.springframework.http.ResponseEntity;
 
 
-
 import java.util.Map;
 
 public interface AccountService {
 
     Map<String, AccountEntity> getAccountMap();
-    CreateAccountResponse createAccount (CreateAccountRequest createAccountRequest);
+
+    CreateAccountResponse createAccount(CreateAccountRequest createAccountRequest);
+
     LoginResponse login(LoginRequest loginRequest);
-    WithdrawalResponse withdraw (WithdrawalRequest request);
+
+    WithdrawalResponse withdraw(WithdrawalRequest request);
+
     ResponseEntity<DepositResponse> deposit(DepositRequest depositRequest);
-    ResponseEntity<AccountInfoResponse> getAccountInfo (String accountNumber);
+
+    ResponseEntity<AccountInfoResponse> getAccountInfo(String accountNumber);
+
     ResponseEntity<TransactionHistory> getTransactionHistory(String accountNumber);
 //    ResponseEntity<List<TransactionHistoryResponse>> getTransactionHistory(String accountNumber);
 }

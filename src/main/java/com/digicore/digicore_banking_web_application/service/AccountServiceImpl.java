@@ -35,7 +35,7 @@ import java.util.*;
 
 @Service
 @Slf4j
-public class AccountServiceImpl implements AccountService{
+public class AccountServiceImpl implements AccountService {
 
     private final Double maximumDeposit = 1000000.0;
     private final Double minimumDeposit = 1.0;
@@ -44,9 +44,9 @@ public class AccountServiceImpl implements AccountService{
     private HashMap<String, AccountEntity> accountMap = new HashMap<>();
     List<String> nameList = new ArrayList<>();
 
-    private  AuthenticationManager authenticationManager;
-    private  JwtUtils jwtUtils;
-    private  AccountHistoryDaoImpl accountHistoryDao;
+    private AuthenticationManager authenticationManager;
+    private JwtUtils jwtUtils;
+    private AccountHistoryDaoImpl accountHistoryDao;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Bean
@@ -75,10 +75,9 @@ public class AccountServiceImpl implements AccountService{
     }
 
 
-
     @Override
     public Map<String, AccountEntity> getAccountMap() {
-        return null;
+        return accountMap;
     }
 
     @Override
@@ -98,7 +97,7 @@ public class AccountServiceImpl implements AccountService{
             return createAccountResponse;
         }
 
-        if(accountMap.containsKey(accountNumber)){
+        if (accountMap.containsKey(accountNumber)) {
             createAccount(createAccountRequest);
         }
 
@@ -139,6 +138,8 @@ public class AccountServiceImpl implements AccountService{
         createAccountResponse.setSuccess(true);
         createAccountResponse.setResponseCode(200);
 
+        System.out.println("This is the state of account map " + accountMap);
+
 
         return createAccountResponse;
     }
@@ -150,10 +151,10 @@ public class AccountServiceImpl implements AccountService{
 
             authentication = authenticationManager.authenticate(new
                     UsernamePasswordAuthenticationToken(
-                            loginRequest.getAccountNumber(),
-                            loginRequest.getAccountPassword()));
+                    loginRequest.getAccountNumber(),
+                    loginRequest.getAccountPassword()));
 
-        }catch (BadCredentialsException exe){
+        } catch (BadCredentialsException exe) {
 
             throw new ApiRequestUnauthorizedException("Wrong Credentials!!!");
 
@@ -290,11 +291,11 @@ public class AccountServiceImpl implements AccountService{
             throw new ApiResourceNotFoundException("No user with this username found in our database!!");
         }
 
-        accountInfoResponse.setMessage("Account info fetched succesfully!!");
+        accountInfoResponse.setMessage("Account info fetched successfully!!");
         accountInfoResponse.setResponseCode(200);
         accountInfoResponse.setSuccess(true);
 
-        return new ResponseEntity<>(accountInfoResponse, HttpStatus.CREATED);
+        return new ResponseEntity<>(accountInfoResponse, HttpStatus.OK);
     }
 
     @Override

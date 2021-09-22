@@ -25,7 +25,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> doLogin(@RequestBody LoginRequest loginRequest){
+    public ResponseEntity<LoginResponse> doLogin(@RequestBody LoginRequest loginRequest) {
 
         var loginUser = accountService.login(loginRequest);
 

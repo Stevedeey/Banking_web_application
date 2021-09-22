@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -75,6 +76,19 @@ public class JwtUtils {
         return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
     }
 
+    private Boolean isTokenExpired(String token){
+        return  expirationDate(token).before(new Date());
+    }
+
+    private  String extractUsername(String token){
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    private Boolean validateToken2(String token, UserDetails userDetails){
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+
+    }
 
 
 
