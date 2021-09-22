@@ -135,7 +135,7 @@ public class AccountServiceImpl implements AccountService{
         nameList.add(createAccountRequest.getAccountName()); // Using this to keep track of account names
 
         createAccountResponse = new CreateAccountResponse();
-        createAccountResponse.setMessage("Account successfully created" + "Your new account number is " + accountNumber);
+        createAccountResponse.setMessage("Account successfully created," + " Your new account number is " + accountNumber);
         createAccountResponse.setSuccess(true);
         createAccountResponse.setResponseCode(200);
 

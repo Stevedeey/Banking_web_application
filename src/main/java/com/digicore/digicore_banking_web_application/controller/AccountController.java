@@ -8,6 +8,7 @@ import com.digicore.digicore_banking_web_application.payload.response.AccountInf
 import com.digicore.digicore_banking_web_application.payload.response.CreateAccountResponse;
 import com.digicore.digicore_banking_web_application.payload.response.DepositResponse;
 import com.digicore.digicore_banking_web_application.service.AccountService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,12 +19,15 @@ import org.springframework.web.bind.annotation.*;
 public class AccountController {
     private final AccountService service;
 
+    @Autowired
     public AccountController(AccountService service) {
         this.service = service;
     }
 
+
     @GetMapping(path = "account_info/{accountNumber}")
     public ResponseEntity<AccountInfoResponse> getAccountInfo(@PathVariable String accountNumber){
+
         return service.getAccountInfo(accountNumber);
     }
 
