@@ -13,3 +13,6 @@ This application allows the following endpoints:
 4. POST\withdrawal:User can withdraw if has at least #500 after the withdrawn amount is deducted from current balance
 
 5.POST\create_account: User can create an account.
+
+#Configuration
+server.port : 8080
