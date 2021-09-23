@@ -107,7 +107,7 @@ public class AccountServiceImpl implements AccountService {
             createAccountResponse = new CreateAccountResponse();
             createAccountResponse.setResponseCode(400);
             createAccountResponse.setSuccess(false);
-            createAccountResponse.setMessage("Your initial deposit cannot be less than 500 ");
+            createAccountResponse.setMessage("Your initial deposit cannot be less than 500");
             return createAccountResponse;
 
         }
@@ -127,6 +127,8 @@ public class AccountServiceImpl implements AccountService {
         transactionDetail.setAccountBalance(initialDeposit);
         transactionDetail.setAmount(initialDeposit);
         transactionDetail.setNarration("Initial Deposit");
+
+        var history = accountHistoryDao.save(transactionDetail);
 
         if (accountMap == null) accountMap = new HashMap<>();
 
@@ -230,9 +232,14 @@ public class AccountServiceImpl implements AccountService {
         accountHistoryDao.save(transactionDetail);
 
         response = new WithdrawalResponse();
-        response.setMessage("Success Withdrawal");
+
+        response.setMessage("You withdrew the amount of "
+                +withdrawalRequest.getWithdrawnAmount()
+                + "successfully, Your new balance is: "
+                + userAccount.getBalance());
         response.setSuccess(true);
         response.setResponseCode(200);
+
 
         log.info("Balance {} ", userAccount.getBalance());
 
@@ -265,11 +272,12 @@ public class AccountServiceImpl implements AccountService {
             throw new ApiResourceNotFoundException("Account does not exist!!!");
         }
 
-        res.setMessage("Successfully deposited money");
-        res.setSuccess(true);
-        res.setResponseCode(201);
 
-        return new ResponseEntity<>(res, HttpStatus.CREATED);
+        res.setMessage("Successfully deposited a sum of "+ depositRequest.getAmount() +" Your new balance is " +userAccount.getBalance());
+        res.setSuccess(true);
+        res.setResponseCode(200);
+
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     @Override
@@ -303,7 +311,7 @@ public class AccountServiceImpl implements AccountService {
 
         var transactionHistoryList = accountHistoryDao.getAccountHistory(accountNumber);
         TransactionHistory transactionHistory = new TransactionHistory();
-        transactionHistory.setTransactionHistoryResponseList(transactionHistoryList);
+        transactionHistory.setTransactionHistoryList(transactionHistoryList);
 
         return new ResponseEntity<>(transactionHistory, HttpStatus.OK);
     }

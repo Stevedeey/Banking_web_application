@@ -49,7 +49,7 @@ public class AccountHistoryDaoImpl  implements Dao<TransactionDetail, Map>{
 
 
     public List<TransactionHistoryResponse> getAccountHistory (String accountNumber){
-        log.error(":::Account History Map{}",accountHistoryMap.get(accountNumber));
+        log.info(":::Account History Map{}",accountHistoryMap.get(accountNumber));
         return accountHistoryMap.get(accountNumber) != null ? accountHistoryMap.get(accountNumber) : new ArrayList<>();
     }
 }

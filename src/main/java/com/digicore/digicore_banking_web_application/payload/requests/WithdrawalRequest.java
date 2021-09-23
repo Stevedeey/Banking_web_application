@@ -5,18 +5,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 public class WithdrawalRequest {
 
-    String accountNumber;
+    @NotNull(message = "Account number cannot be empty")
+    private String accountNumber;
 
-    String accountPassword;
+    @NotNull(message = "Password cannot be empty")
+    private String accountPassword;
 
-    Double withdrawnAmount;
+    @NotNull(message = "Amount cannot be empty")
+    private Double withdrawnAmount;
 
-    String narration;
+    @NotNull(message = "Narration cannot be empty")
+    private String narration;
 
 }

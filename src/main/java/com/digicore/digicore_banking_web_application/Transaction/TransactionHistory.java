@@ -8,13 +8,13 @@ import java.util.List;
 @Component
 public class TransactionHistory {
 
-    private List<TransactionHistoryResponse> transactionHistoryResponseList;
+    private List<TransactionHistoryResponse> transactionHistoryList;
 
-    public List<TransactionHistoryResponse> getTransactionHistoryResponseList() {
-        return transactionHistoryResponseList;
+    public List<TransactionHistoryResponse> getTransactionHistoryList() {
+        return transactionHistoryList;
     }
 
-    public void setTransactionHistoryResponseList(List<TransactionHistoryResponse> transactionHistoryResponseList) {
-        this.transactionHistoryResponseList = transactionHistoryResponseList;
+    public void setTransactionHistoryList(List<TransactionHistoryResponse> transactionHistoryList) {
+        this.transactionHistoryList = transactionHistoryList;
     }
 }
