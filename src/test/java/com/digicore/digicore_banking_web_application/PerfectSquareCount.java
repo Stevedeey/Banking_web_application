@@ -26,6 +26,7 @@ public class PerfectSquareCount {
 
         //::::TEST CASES
 
+
         System.out.println(" For Length = 1 and Width = 1: Result is>> "+countPerfectSquares(1,1));
         System.out.println(" For Length = 3 and Width = 3: Result is>> "+countPerfectSquares(3,3));
         System.out.println(" For Length = 4 and Width = 5: Result is>> "+countPerfectSquares(4,5));

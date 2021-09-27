@@ -39,15 +39,9 @@ class AccountServiceTest {
                 .accountName("Olaleye Oluwatosin")
                 .balance(900.00)
                         .build();
+
         accountMap.put(accountEntity.getAccountNumber(), accountEntity);
-
-
-
-
-
-
     }
-
 
 
     @Test
