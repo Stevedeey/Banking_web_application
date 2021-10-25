@@ -27,8 +27,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> doLogin(@RequestBody LoginRequest loginRequest) {
 
-        var loginUser = accountService.login(loginRequest);
-
-        return new ResponseEntity<>(loginUser, HttpStatus.OK);
+        return new ResponseEntity<>(accountService.login(loginRequest), HttpStatus.OK);
     }
 }
